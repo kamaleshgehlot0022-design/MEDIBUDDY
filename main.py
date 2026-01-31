@@ -392,7 +392,8 @@ async def get_recent_updates(hours: int = Query(24, le=168)):
 
 # Create static directory if it doesn't exist
 import os
-static_dir = os.path.join(os.path.dirname(__file__), "static")
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+static_dir = os.path.join(BASE_DIR, "static")
 os.makedirs(static_dir, exist_ok=True)
 
 # Mount static files
