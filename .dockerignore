@@ -1,0 +1,14 @@
+__pycache__/
+.env
+.env.example
+.git/
+.gitignore
+.vscode/
+venv/
+*.pyc
+*.pyo
+*.pyd
+*.db
+test_*.py
+.gemini/
+brain/

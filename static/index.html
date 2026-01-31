@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MediBuddy | Healthcare AI Assistant</title>
+    <meta name="description" content="Enterprise pharmaceutical intelligence for healthcare professionals">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+
+<body>
+    <!-- Command Palette Overlay -->
+    <div id="command-palette" class="command-palette hidden">
+        <div class="command-palette-backdrop"></div>
+        <div class="command-palette-modal">
+            <div class="command-input-wrapper">
+                <svg class="command-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <path d="m21 21-4.35-4.35"></path>
+                </svg>
+                <input type="text" id="command-input" placeholder="Search drugs, payers, or type a command..."
+                    autocomplete="off">
+                <kbd>ESC</kbd>
+            </div>
+            <div class="command-results" id="command-results">
+                <div class="command-section">
+                    <div class="command-section-title">Quick Actions</div>
+                    <div class="command-item" data-action="drug-search">
+                        <span class="command-item-icon">💊</span>
+                        <span>Search Drugs</span>
+                        <kbd>D</kbd>
+                    </div>
+                    <div class="command-item" data-action="check-coverage">
+                        <span class="command-item-icon">🏥</span>
+                        <span>Check Coverage</span>
+                        <kbd>C</kbd>
+                    </div>
+                    <div class="command-item" data-action="interactions">
+                        <span class="command-item-icon">⚠️</span>
+                        <span>Drug Interactions</span>
+                        <kbd>I</kbd>
+                    </div>
+                    <div class="command-item" data-action="chat">
+                        <span class="command-item-icon">🤖</span>
+                        <span>AI Chat</span>
+                        <kbd>A</kbd>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Real-Time Update Toast -->
+    <div id="toast-container" class="toast-container"></div>
+
+    <!-- Main Layout -->
+    <div class="app-layout">
+        <!-- Sidebar Navigation -->
+        <aside id="sidebar" class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <span class="logo-icon">🏥</span>
+                    <span class="logo-text">MediBuddy</span>
+                </div>
+                <button class="sidebar-toggle" id="sidebar-toggle" title="Toggle Sidebar [">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M15 18l-6-6 6-6" />
+                    </svg>
+                </button>
+            </div>
+
+            <nav class="sidebar-nav">
+                <a href="#dashboard" class="nav-item active" data-section="dashboard">
+                    <span class="nav-icon">📊</span>
+                    <span class="nav-text">Dashboard</span>
+                </a>
+
+                <div class="nav-group">
+                    <div class="nav-group-title">Intelligence</div>
+                    <a href="#drug-lookup" class="nav-item" data-section="drug-lookup">
+                        <span class="nav-icon">💊</span>
+                        <span class="nav-text">Drug Lookup</span>
+                    </a>
+                    <a href="#pricing" class="nav-item" data-section="pricing">
+                        <span class="nav-icon">💰</span>
+                        <span class="nav-text">Pricing Intel</span>
+                    </a>
+                    <a href="#coverage" class="nav-item" data-section="coverage">
+                        <span class="nav-icon">🏥</span>
+                        <span class="nav-text">Payer Coverage</span>
+                        <span class="nav-badge">4,800+</span>
+                    </a>
+                </div>
+
+                <div class="nav-group">
+                    <div class="nav-group-title">Clinical Tools</div>
+                    <a href="#prior-auth" class="nav-item" data-section="prior-auth">
+                        <span class="nav-icon">📋</span>
+                        <span class="nav-text">Prior Auth</span>
+                    </a>
+                    <a href="#interactions" class="nav-item" data-section="interactions">
+                        <span class="nav-icon">⚠️</span>
+                        <span class="nav-text">Interactions</span>
+                    </a>
+                    <a href="#specialty" class="nav-item" data-section="specialty">
+                        <span class="nav-icon">🏪</span>
+                        <span class="nav-text">Specialty Rx</span>
+                    </a>
+                </div>
+
+                <div class="nav-group">
+                    <div class="nav-group-title">AI Assistant</div>
+                    <a href="#chat" class="nav-item" data-section="chat">
+                        <span class="nav-icon">🤖</span>
+                        <span class="nav-text">AI Chat</span>
+                        <span class="nav-badge pulse">Live</span>
+                    </a>
+                </div>
+            </nav>
+
+            <div class="sidebar-footer">
+                <div class="system-status">
+                    <div class="status-dot online"></div>
+                    <div class="status-text" id="sidebar-region-text">System Online</div>
+                </div>
+                <button class="theme-toggle" id="theme-toggle" title="Toggle Theme">
+                    <span class="theme-icon-dark">🌙</span>
+                    <span class="theme-icon-light">☀️</span>
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <!-- Top Bar -->
+            <header class="topbar">
+                <div class="breadcrumb" id="breadcrumb">
+                    <span class="breadcrumb-item">MediBuddy</span>
+                    <span class="breadcrumb-separator">/</span>
+                    <span class="breadcrumb-item active">Dashboard</span>
+                </div>
+
+                <div class="topbar-actions">
+                    <div
+                        style="display: flex; align-items: center; gap: 8px; margin-right: 12px; padding: 4px 12px; background: var(--bg-tertiary); border-radius: var(--radius-md); border: 1px solid var(--border-color);">
+                        <span style="font-size: 14px;">📍</span>
+                        <select id="global-location-select"
+                            style="background: transparent; border: none; color: var(--text-primary); font-size: 13px; font-weight: 500; outline: none; cursor: pointer;">
+                            <optgroup label="International">
+                                <option value="UK">United Kingdom</option>
+                                <option value="IN">India</option>
+                                <option value="DE">Germany</option>
+                                <option value="CA">Canada</option>
+                                <option value="AU">Australia</option>
+                                <option value="AE">United Arab Emirates</option>
+                            </optgroup>
+                            <optgroup label="United States">
+                                <option value="FL" selected>Florida</option>
+                                <option value="NY">New York</option>
+                                <option value="CA">California</option>
+                                <option value="TX">Texas</option>
+                                <option value="NJ">New Jersey</option>
+                                <option value="MA">Massachusetts</option>
+                                <option value="WA">Washington</option>
+                            </optgroup>
+                        </select>
+                    </div>
+
+                    <button class="topbar-btn" id="cmd-k-btn" title="Command Palette (Ctrl+K)">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18"
+                            height="18">
+                            <circle cx="11" cy="11" r="8"></circle>
+                            <path d="m21 21-4.35-4.35"></path>
+                        </svg>
+                        <span>Search</span>
+                        <kbd>⌘K</kbd>
+                    </button>
+
+                    <button class="topbar-btn" id="voice-btn" title="Voice Mode (V)">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18"
+                            height="18">
+                            <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+                            <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+                            <line x1="12" y1="19" x2="12" y2="23"></line>
+                        </svg>
+                    </button>
+
+                    <div class="topbar-updates" id="updates-indicator">
+                        <span class="updates-dot"></span>
+                        <span class="updates-count">0</span>
+                        <span class="updates-text">updates</span>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Content Sections -->
+            <div class="content-wrapper">
+                <!-- Dashboard Section -->
+                <section id="dashboard" class="section active">
+                    <div class="section-header">
+                        <h1>Dashboard</h1>
+                        <p class="section-subtitle">Real-time pharmaceutical intelligence at your fingertips</p>
+                    </div>
+
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-icon">💊</div>
+                            <div class="stat-content">
+                                <div class="stat-value" id="stat-drugs">50+</div>
+                                <div class="stat-label">Drugs in Database</div>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon">🏥</div>
+                            <div class="stat-content">
+                                <div class="stat-value" id="stat-payers">4,800+</div>
+                                <div class="stat-label">Payer Plans</div>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon">⚡</div>
+                            <div class="stat-content">
+                                <div class="stat-value" id="stat-sources">40K+</div>
+                                <div class="stat-label">Data Sources</div>
+                            </div>
+                        </div>
+                        <div class="stat-card accent">
+                            <div class="stat-icon">🧠</div>
+                            <div class="stat-content">
+                                <div class="stat-value">24/7</div>
+                                <div class="stat-label">Real-Time Updates</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="dashboard-grid">
+                        <!-- Quick Actions -->
+                        <div class="card quick-actions-card">
+                            <div class="card-header">
+                                <h3>Quick Actions</h3>
+                            </div>
+                            <div class="card-body">
+                                <div class="quick-actions">
+                                    <button class="quick-action" data-action="drug-search">
+                                        <span class="qa-icon">💊</span>
+                                        <span class="qa-text">Search Drug</span>
+                                    </button>
+                                    <button class="quick-action" data-action="check-coverage">
+                                        <span class="qa-icon">🏥</span>
+                                        <span class="qa-text">Check Coverage</span>
+                                    </button>
+                                    <button class="quick-action" data-action="interactions">
+                                        <span class="qa-icon">⚠️</span>
+                                        <span class="qa-text">Interactions</span>
+                                    </button>
+                                    <button class="quick-action" data-action="prior-auth">
+                                        <span class="qa-icon">📋</span>
+                                        <span class="qa-text">Generate PA</span>
+                                    </button>
+                                    <button class="quick-action" data-action="pricing">
+                                        <span class="qa-icon">💰</span>
+                                        <span class="qa-text">Compare Prices</span>
+                                    </button>
+                                    <button class="quick-action" data-action="chat">
+                                        <span class="qa-icon">🤖</span>
+                                        <span class="qa-text">Ask AI</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Regional Insights -->
+                        <div class="card">
+                            <div class="card-header">
+                                <h3>🌍 Regional Market Insights</h3>
+                                <span class="card-badge">Geographic Data</span>
+                            </div>
+                            <div class="card-body">
+                                <div style="display: flex; flex-direction: column; gap: 12px;">
+                                    <div
+                                        style="display: flex; justify-content: space-between; align-items: center; padding: 10px; background: rgba(239, 68, 68, 0.1); border-radius: 8px;">
+                                        <div style="display: flex; align-items: center; gap: 10px;">
+                                            <span style="font-size: 20px;">📈</span>
+                                            <div>
+                                                <div style="font-size: 14px; font-weight: 600;">High Cost Regions</div>
+                                                <div style="font-size: 11px; color: var(--text-secondary);">CA, NY, NJ,
+                                                    MA</div>
+                                            </div>
+                                        </div>
+                                        <div style="color: var(--danger); font-weight: 700;">+12% to +18%</div>
+                                    </div>
+                                    <div
+                                        style="display: flex; justify-content: space-between; align-items: center; padding: 10px; background: rgba(16, 185, 129, 0.1); border-radius: 8px;">
+                                        <div style="display: flex; align-items: center; gap: 10px;">
+                                            <span style="font-size: 20px;">📉</span>
+                                            <div>
+                                                <div style="font-size: 14px; font-weight: 600;">Cost Advantage regions
+                                                </div>
+                                                <div style="font-size: 11px; color: var(--text-secondary);">MS, WV, AL,
+                                                    KY</div>
+                                            </div>
+                                        </div>
+                                        <div style="color: var(--success); font-weight: 700;">-10% to -15%</div>
+                                    </div>
+                                    <p style="font-size: 12px; color: var(--text-tertiary); margin-top: 8px;">
+                                        * Market prices vary by CMS regional NADAC variations.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Real-Time Updates Feed -->
+                        <div class="card updates-card">
+                            <div class="card-header">
+                                <h3>
+                                    <span class="live-dot"></span>
+                                    Real-Time Updates
+                                </h3>
+                                <span class="card-badge">Live</span>
+                            </div>
+                            <div class="card-body">
+                                <div class="updates-feed" id="updates-feed">
+                                    <div class="update-item">
+                                        <div class="update-icon info">📢</div>
+                                        <div class="update-content">
+                                            <div class="update-text">MediBuddy Real-Time Engine initialized</div>
+                                            <div class="update-time">Just now</div>
+                                        </div>
+                                    </div>
+                                    <div class="update-item">
+                                        <div class="update-icon success">✓</div>
+                                        <div class="update-content">
+                                            <div class="update-text">Connected to 40,000+ data sources</div>
+                                            <div class="update-time">Just now</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Popular Drugs -->
+                        <div class="card">
+                            <div class="card-header">
+                                <h3>Popular Drugs</h3>
+                            </div>
+                            <div class="card-body">
+                                <div class="drug-list" id="popular-drugs">
+                                    <!-- Populated by JS -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Drug Lookup Section -->
+                <section id="drug-lookup" class="section">
+                    <div class="section-header">
+                        <h1>Drug Lookup</h1>
+                        <p class="section-subtitle">Comprehensive drug information with NDC, GPI, indications, and
+                            warnings</p>
+                    </div>
+
+                    <div class="search-container">
+                        <div class="search-box large">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="11" cy="11" r="8"></circle>
+                                <path d="m21 21-4.35-4.35"></path>
+                            </svg>
+                            <input type="text" id="drug-search-input"
+                                placeholder="Search by brand name, generic name, or drug class...">
+                        </div>
+                    </div>
+
+                    <div class="drug-results" id="drug-results">
+                        <!-- Drug cards populated by JS -->
+                    </div>
+
+                    <div class="drug-detail-panel hidden" id="drug-detail-panel">
+                        <!-- Drug details populated by JS -->
+                    </div>
+                </section>
+
+                <!-- Pricing Section -->
+                <section id="pricing" class="section">
+                    <div class="section-header">
+                        <h1>Pricing Intelligence</h1>
+                        <p class="section-subtitle">AWP, WAC, NADAC, 340B, and cash prices updated in real-time</p>
+                    </div>
+
+                    <div class="card pricing-search-card" style="margin-bottom: 24px;">
+                        <div class="card-body">
+                            <div style="display: flex; gap: 16px; margin-bottom: 16px;">
+                                <div style="flex: 2;">
+                                    <label
+                                        style="display: block; font-size: 12px; color: var(--text-tertiary); margin-bottom: 8px;">Find
+                                        Medication</label>
+                                    <div class="search-box">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <circle cx="11" cy="11" r="8"></circle>
+                                            <path d="m21 21-4.35-4.35"></path>
+                                        </svg>
+                                        <input type="text" id="pricing-search-input" placeholder="Enter drug name...">
+                                    </div>
+                                </div>
+                                <div style="flex: 1;">
+                                    <label
+                                        style="display: block; font-size: 12px; color: var(--text-tertiary); margin-bottom: 8px;">Patient
+                                        Location</label>
+                                    <select id="pricing-location-select" class="form-select"
+                                        style="width: 100%; height: 50px; background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: var(--radius-md); color: var(--text-primary); padding: 0 12px;">
+                                        <option value="">Standard (USD/National)</option>
+                                        <optgroup label="International Markets">
+                                            <option value="UK">United Kingdom (NHS Pricing)</option>
+                                            <option value="IN">India (Domestic Generics)</option>
+                                            <option value="DE">Germany (GKV Statutory)</option>
+                                            <option value="CA">Canada (Public Formulary)</option>
+                                            <option value="AU">Australia (PBS Scheme)</option>
+                                            <option value="AE">United Arab Emirates</option>
+                                        </optgroup>
+                                        <optgroup label="United States High Cost">
+                                            <option value="CA">California (+18%)</option>
+                                            <option value="NY">New York (+15%)</option>
+                                            <option value="NJ">New Jersey (+14%)</option>
+                                            <option value="MA">Massachusetts (+12%)</option>
+                                            <option value="WA">Washington (+10%)</option>
+                                        </optgroup>
+                                        <optgroup label="United States Lower Cost">
+                                            <option value="KY">Kentucky (-10%)</option>
+                                            <option value="AL">Alabama (-12%)</option>
+                                            <option value="WV">West Virginia (-13%)</option>
+                                            <option value="MS">Mississippi (-15%)</option>
+                                        </optgroup>
+                                    </select>
+                                </div>
+                                <div style="display: flex; align-items: flex-end;">
+                                    <button class="btn primary" id="pricing-search-btn"
+                                        style="height: 50px; padding: 0 24px;">Search Prices</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="pricing-results" id="pricing-results">
+                        <!-- Pricing cards populated by JS -->
+                    </div>
+                </section>
+
+                <!-- Coverage Section -->
+                <section id="coverage" class="section">
+                    <div class="section-header">
+                        <h1>Payer Coverage</h1>
+                        <p class="section-subtitle">Formulary status across 4,800+ commercial, Medicare, and Medicaid
+                            plans</p>
+                    </div>
+
+                    <div class="coverage-search-grid">
+                        <div class="search-box">
+                            <input type="text" id="coverage-drug-input" placeholder="Drug name...">
+                        </div>
+                        <div class="search-box">
+                            <input type="text" id="coverage-payer-input" placeholder="Payer name (optional)...">
+                        </div>
+                        <button class="btn primary" id="coverage-search-btn">Check Coverage</button>
+                    </div>
+
+                    <div class="coverage-results" id="coverage-results">
+                        <!-- Coverage cards populated by JS -->
+                    </div>
+                </section>
+
+                <!-- Prior Auth Section -->
+                <section id="prior-auth" class="section">
+                    <div class="section-header">
+                        <h1>Prior Authorization Assistant</h1>
+                        <p class="section-subtitle">Auto-generate PA forms with clinical justification in seconds</p>
+                    </div>
+
+                    <div class="pa-form card">
+                        <div class="card-body">
+                            <div class="form-grid">
+                                <div class="form-group">
+                                    <label>Drug Name</label>
+                                    <input type="text" id="pa-drug-input" placeholder="e.g., Ozempic">
+                                </div>
+                                <div class="form-group">
+                                    <label>Payer Name</label>
+                                    <input type="text" id="pa-payer-input" placeholder="e.g., Aetna">
+                                </div>
+                                <div class="form-group full-width">
+                                    <label>Diagnosis</label>
+                                    <input type="text" id="pa-diagnosis-input"
+                                        placeholder="e.g., Type 2 Diabetes Mellitus">
+                                </div>
+                            </div>
+                            <button class="btn primary large" id="generate-pa-btn">
+                                <span>⚡</span> Generate PA Form
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="pa-result hidden" id="pa-result">
+                        <!-- PA form populated by JS -->
+                    </div>
+                </section>
+
+                <!-- Interactions Section -->
+                <section id="interactions" class="section">
+                    <div class="section-header">
+                        <h1>Drug Interactions</h1>
+                        <p class="section-subtitle">Check drug-drug, drug-food, and drug-disease interactions</p>
+                    </div>
+
+                    <div class="interactions-input card">
+                        <div class="card-body">
+                            <label>Enter medications (comma-separated)</label>
+                            <div class="input-with-btn">
+                                <input type="text" id="interactions-input"
+                                    placeholder="e.g., warfarin, aspirin, lisinopril">
+                                <button class="btn primary" id="check-interactions-btn">Check</button>
+                            </div>
+                            <div class="drug-chips" id="interaction-chips">
+                                <!-- Drug chips populated by JS -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="interactions-results" id="interactions-results">
+                        <!-- Interactions populated by JS -->
+                    </div>
+                </section>
+
+                <!-- Specialty Rx Section -->
+                <section id="specialty" class="section">
+                    <div class="section-header">
+                        <h1>Specialty Pharmacy</h1>
+                        <p class="section-subtitle">Find authorized specialty pharmacies and J-Codes</p>
+                    </div>
+
+                    <div class="search-container">
+                        <div class="search-box large">
+                            <input type="text" id="specialty-search-input" placeholder="Enter specialty drug name..."
+                                style="border-radius: var(--radius-md) 0 0 var(--radius-md);">
+                            <button class="btn primary" id="specialty-search-btn"
+                                style="border-radius: 0 var(--radius-md) var(--radius-md) 0; height: 50px; padding: 0 24px;">Find
+                                Pharmacies</button>
+                        </div>
+                    </div>
+
+                    <div class="specialty-results" id="specialty-results">
+                        <!-- Specialty pharmacy info populated by JS -->
+                    </div>
+                </section>
+
+                <!-- AI Chat Section -->
+                <section id="chat" class="section chat-section">
+                    <div class="chat-container">
+                        <div class="chat-header">
+                            <div class="chat-title">
+                                <span class="chat-icon">🤖</span>
+                                <div>
+                                    <h2>MediBuddy AI</h2>
+                                    <span class="chat-status">
+                                        <span class="status-dot online"></span>
+                                        Online • Real-time data
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="chat-messages" id="chat-messages">
+                            <div class="message assistant">
+                                <div class="message-avatar">🤖</div>
+                                <div class="message-content">
+                                    <div class="message-text">
+                                        <p>Hello! I'm <strong>MediBuddy</strong>, your AI pharmaceutical assistant.</p>
+                                        <p>I can help you with:</p>
+                                        <ul>
+                                            <li><strong>Drug Information</strong> - "Tell me about metformin"</li>
+                                            <li><strong>Pricing</strong> - "What's the price of Ozempic?"</li>
+                                            <li><strong>Coverage</strong> - "Is Eliquis covered by Aetna?"</li>
+                                            <li><strong>Interactions</strong> - "Check interactions between warfarin and
+                                                aspirin"</li>
+                                            <li><strong>Prior Auth</strong> - "Generate PA for Ozempic"</li>
+                                        </ul>
+                                        <p>Ask me anything! 💊</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="chat-input-container">
+                            <div class="chat-suggestions" id="chat-suggestions">
+                                <button class="suggestion-chip">What's the price of Humira?</button>
+                                <button class="suggestion-chip">Is Ozempic covered by Medicare?</button>
+                                <button class="suggestion-chip">Check warfarin + aspirin interactions</button>
+                            </div>
+                            <div class="chat-input-wrapper">
+                                <textarea id="chat-input" placeholder="Ask MediBuddy anything..." rows="1"></textarea>
+                                <button class="chat-send-btn" id="chat-send-btn">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <line x1="22" y1="2" x2="11" y2="13"></line>
+                                        <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </div>
+
+    <script src="/static/app.js"></script>
+</body>
+
+</html>
